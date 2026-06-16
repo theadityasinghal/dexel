@@ -1,8 +1,7 @@
 nvidia_base_url = "https://integrate.api.nvidia.com/v1"
-log_channel = 1514895510639743027
-error_channel = 1515313910255714406
 ownerid = 852807714031927296
 mainguildid = 1495030598945869904
+guild_log_channel_id= 1516500084420907118
 system_prompt = f"""
 You are Dexel, a Discord bot and general assistant for a community server. 
 You're helpful, direct, and have a casual but not overly informal tone — 
