@@ -15,7 +15,7 @@ except:
 
 class LLMHelper():
     def __init__(self, base_url=nvidia_base_url,
-                 model="meta/llama-3.2-1b-instruct", 
+                 model="deepseek-ai/deepseek-v4-flash", 
                  api_key = os.getenv("NVIDIA_API_KEY")):
         self.client = OpenAI(
             base_url = base_url,
@@ -75,3 +75,16 @@ class ErrorHandler():
             color=discord.Color.red()
         )
         return embed
+
+class Secrecy():
+    def __init__(self):
+        self.ownerid = ownerid
+        self.mainguildid = mainguildid
+
+    def usercheck(self, member: discord.Member):
+        return member.id == self.ownerid
+    def guildcheck(self, guild: discord.Guild):
+        return guild.id == self.mainguildid
+    
+    
+    
