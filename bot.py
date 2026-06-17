@@ -33,7 +33,7 @@ async def main():
 
     # Auto-load all cogs
     for filename in os.listdir("./cogs"):
-        if filename.endswith(".py") and filename not in ("__init__.py", "helpers.py", "test.py", "hyperparams.py"):
+        if filename.endswith(".py") and filename not in ("__init__.py"):
             await bot.load_extension(f"cogs.{filename[:-3]}")
 
     await bot.start(os.getenv("DISCORD_TOKEN"))

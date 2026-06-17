@@ -3,9 +3,7 @@ import discord
 from discord.ext import commands
 import os
 import asyncio
-from cogs.hyperparams import *
-from openai import OpenAI
-import httpx
+from utils.hyperparams import *
 
 try:
     from dotenv import load_dotenv
@@ -14,24 +12,23 @@ except:
     pass
 
 class LLMHelper():
-    def __init__(self, base_url=nvidia_base_url,
-                 model="deepseek-ai/deepseek-v4-flash", 
-                 api_key = os.getenv("NVIDIA_API_KEY")):
-        self.client = OpenAI(
-            base_url = base_url,
-            api_key = api_key
+    def __init__(self):
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_LLM_API"))
+
+    async def _ask(self, final_prompt, model="gemma-4-31b-it", max_output_tokens=1500):
+        response = await self.client.aio.models.generate_content(
+            model=model,
+            contents=final_prompt,
+            config=genai.types.GenerateContentConfig(
+                max_output_tokens=max_output_tokens,
+            )
         )
-        self.model = model
-
-    async def _ask(self, final_prompt, max_tokens=1024, 
-                   temperature=0.2, top_p=0.7, stream = False):
-
-        completion = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": final_prompt}],
-            temperature=temperature, top_p=top_p, max_tokens=max_tokens, stream=False,
-            extra_body={"chat_template_kwargs": {"thinking": False}})
-        return completion.choices[0].message.content
+        # print(response)
+        # instead of response.text
+        parts = response.candidates[0].content.parts
+        actual_text = next(p.text for p in parts if not p.thought)
+        # print(actual_text)
+        return actual_text
     
     async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2):
         final_prompt = system_prompt + user_raw_prompt

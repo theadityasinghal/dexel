@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from cogs.helpers_new import *
+from utils.helpers_new import *
 import asyncio
-from cogs.hyperparams import *
+from utils.hyperparams import *
 
 class OW(commands.Cog):
     def __init__(self, bot):

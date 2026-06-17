@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from cogs.helpers_new import *
+from utils.helpers_new import *
 import asyncio
-from cogs.hyperparams import *
+from utils.hyperparams import *
 
 class LLM(commands.Cog):
     def __init__(self, bot):
@@ -27,7 +27,7 @@ class LLM(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or message.channel.id != 1516854796651462869:
+        if message.author.bot or message.channel.id != 1501200125572153544:
             return
         response = "heyyy"
         response = await self.LLMinstance.askllm(system_prompt+message.content)
