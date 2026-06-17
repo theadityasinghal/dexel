@@ -99,7 +99,13 @@ class MenuSelect(discord.ui.Select):
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 class MenuView(discord.ui.View):
-    def __init__(self, pages: dict, timeout=120):
+    def __init__(self, pages: dict, author_id: int, timeout=120):
         super().__init__(timeout=timeout)
+        self.author_id = author_id
         self.add_item(MenuSelect(pages))
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message("Not your menu.", ephemeral=True)
+            return False
+        return True

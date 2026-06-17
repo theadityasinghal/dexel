@@ -36,14 +36,14 @@ class App(commands.Cog):
     async def help(self, interaction: discord.Interaction):
         await interaction.response.defer()
         embed = discord.Embed(title="Help Menu", description="Pick a category below.")
-        await interaction.followup.send(embed=embed, view=MenuView(HELP_CATEGORIES))
+        await interaction.followup.send(embed=embed, view=MenuView(pages = HELP_CATEGORIES, author_id = interaction.user.id))
 
     @app_commands.command(name="ping", description="check how fast the bot is ⚡️")
     @app_commands.describe()
     async def ping(self, interaction: discord.Interaction):
         await interaction.response.defer()
         embed = discord.Embed(title="PONG!", description=f"The bot replied in {round(self.bot.latency * 1000)}ms!")
-        await interaction.followup.send(embed=embed, view=MenuView(HELP_CATEGORIES))
+        await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(App(bot))
