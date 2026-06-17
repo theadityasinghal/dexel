@@ -11,6 +11,7 @@ HELP_CATEGORIES = {
     "general": ("📋 Bot", """`/help`: this!\n`/about`: Shows the info about the bot."""),
     "moderation": ("🛡️ Moderation", """Coming soon!"""),
     "ai": ("🤖 Artificial Intelligence", """`/chat`: Talk to AI!"""),
+    "utility": ("🛠️ Utility", """`/profile`: Shows a detailed profile of the mentioned user or the author.""")
 }
 
 system_prompt = f"""
