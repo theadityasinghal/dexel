@@ -25,5 +25,16 @@ class LLM(commands.Cog):
         )
         await interaction.followup.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot or message.channel.id != 1516854796651462869:
+            return
+        response = "heyyy"
+        response = await self.LLMinstance.askllm(system_prompt+message.content)
+        if isinstance(response, discord.Embed):
+            await message.channel.send(embed=response, allowed_mentions=discord.AllowedMentions.none())
+            return
+        await message.channel.send(response, allowed_mentions=discord.AllowedMentions.none())
+
 async def setup(bot):
     await bot.add_cog(LLM(bot))
