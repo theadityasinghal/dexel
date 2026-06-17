@@ -19,7 +19,7 @@ class OW(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if not member.bot:
+        if member.bot:
             return
         text = f"""Invite: [Add Dexel to your server](https://discord.com/oauth2/authorize?client_id=1435304876266619061&permissions=3405200329403511&integration_type=0&scope=bot+applications.commands)\nSupport server: https://discord.gg/VqY8qkHuWY"""
         

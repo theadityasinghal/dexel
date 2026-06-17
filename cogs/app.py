@@ -8,6 +8,7 @@ from cogs.hyperparams import *
 class App(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.start_time = discord.utils.utcnow()
 
     @app_commands.command(name="about", description="About Dexel, the cute bot.")
     @app_commands.describe()
@@ -24,6 +25,10 @@ class App(commands.Cog):
         embed.add_field(name="Owner", value=f"<@{ownerid}>", inline=True)
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         embed.set_footer(text="Built in the open, breaks in the open, fixed in the open.")
+        embed.add_field(name="Servers", value=str(len(self.bot.guilds)), inline=True)
+        embed.add_field(name="Users", value=str(sum(g.member_count for g in self.bot.guilds)), inline=True)
+        embed.add_field(name="Ping", value=f"{round(self.bot.latency * 1000)}ms", inline=True)
+        embed.add_field(name="Uptime", value=str(discord.utils.utcnow() - self.bot.start_time).split(".")[0], inline=True)
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="help", description="oh help this pour soul!")
@@ -31,6 +36,13 @@ class App(commands.Cog):
     async def help(self, interaction: discord.Interaction):
         await interaction.response.defer()
         embed = discord.Embed(title="Help Menu", description="Pick a category below.")
+        await interaction.followup.send(embed=embed, view=MenuView(HELP_CATEGORIES))
+
+    @app_commands.command(name="ping", description="check how fast the bot is ⚡️")
+    @app_commands.describe()
+    async def ping(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        embed = discord.Embed(title="PONG!", description=f"The bot replied in {round(self.bot.latency * 1000)}ms!")
         await interaction.followup.send(embed=embed, view=MenuView(HELP_CATEGORIES))
 
 async def setup(bot):
