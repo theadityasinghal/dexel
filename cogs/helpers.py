@@ -85,6 +85,21 @@ class Secrecy():
         return member.id == self.ownerid
     def guildcheck(self, guild: discord.Guild):
         return guild.id == self.mainguildid
-    
-    
-    
+
+
+class MenuSelect(discord.ui.Select):
+    def __init__(self, pages: dict, placeholder="Choose an option..."):
+        self.pages = pages
+        options = [discord.SelectOption(label=label, value=key) for key, (label, _) in pages.items()]
+        super().__init__(placeholder=placeholder, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        label, desc = self.pages[self.values[0]]
+        embed = discord.Embed(title=label, description=desc, color=discord.Color.blurple())
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+class MenuView(discord.ui.View):
+    def __init__(self, pages: dict, timeout=120):
+        super().__init__(timeout=timeout)
+        self.add_item(MenuSelect(pages))
+

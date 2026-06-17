@@ -8,9 +8,9 @@ from cogs.hyperparams import *
 class LLM(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.LLMinstance = LLMHelper(model="deepseek-ai/deepseek-v4-pro")
+        self.LLMinstance = LLMHelper()
 
-    @app_commands.command(name="chat", description="Chat with Dexel :D")
+    @app_commands.command(name="llm", description="Chat with Dexel :D")
     @app_commands.describe(prompt="your prompt, could be anything, say 'who's the owner of this bot?")
     async def embed(self, interaction: discord.Interaction, prompt: str):
         await interaction.response.defer()

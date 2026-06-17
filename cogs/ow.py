@@ -19,7 +19,7 @@ class OW(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if member.bot:
+        if not member.bot:
             return
         text = f"""Invite: [Add Dexel to your server](https://discord.com/oauth2/authorize?client_id=1435304876266619061&permissions=3405200329403511&integration_type=0&scope=bot+applications.commands)\nSupport server: https://discord.gg/VqY8qkHuWY"""
         
@@ -29,8 +29,6 @@ class OW(commands.Cog):
             ),
             color=discord.Color.blue()
         )
-        
-
         try:
             await member.send(embed=embed)
             await member.send(text)
@@ -38,6 +36,28 @@ class OW(commands.Cog):
             pass
         except discord.HTTPException:
             pass
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        if member.guild.id != openweights_id:
+            return
+        channel = self.bot.get_channel(openweights_log)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(openweights_log)
+            except discord.NotFound:
+                return
+
+        embed = discord.Embed(
+            description=f"📤 **{member}** left the server",
+            color=discord.Color.red(),
+            timestamp=discord.utils.utcnow()
+        )
+        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_footer(text=f"ID: {member.id} • Members: {member.guild.member_count}")
+
+        await channel.send(embed=embed)
+        
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
