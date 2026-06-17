@@ -27,7 +27,7 @@ class LLM(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or message.channel.id != 1501200125572153544:
+        if message.author.bot or message.channel.id != 1516854796651462869:
             return
         response = "heyyy"
         response = await self.LLMinstance.askllm(system_prompt+message.content)
