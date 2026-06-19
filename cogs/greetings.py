@@ -124,6 +124,14 @@ class Greeting(commands.Cog):
     ):
         await interaction.response.defer()
 
+        if not interaction.user.guild_permissions.manage_guild:
+            embed = discord.Embed(
+                title="Missing Permissions",
+                description="You need **Manage Server** or **Administrator** permission to use this command."
+            )
+            await interaction.followup.send(embed=embed)
+            return
+
         if type is None and (channel is not None or message is not None):
             embed = discord.Embed(title="Invalid Arguments",
                                    description="Select `type: join | leave`")
@@ -201,6 +209,7 @@ class Greeting(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        print(f"[DEBUG] on_member_remove fired for {member.display_name}")
         config = self.bot.db.get_greetings_config(member.guild.id)
         if config['leave_channel_id'] is None:
             return
