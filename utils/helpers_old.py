@@ -42,8 +42,9 @@ class LLMHelper():
                     raise RuntimeError("Got an empty message")
                 return response
             except Exception as e:
-                #print(f"Attempt {attempt + 1} failed: {e}")
+                print(f"Attempt {attempt + 1} failed: {e}")
                 await asyncio.sleep(wait_time)
+            #print(f"attempt {attempt} failed")
         return customError("LLMfailure")
 
 def customError(permission, arguments = None) -> discord.Embed:

@@ -23,3 +23,15 @@ Keep responses under 3-4 sentences unless the question genuinely needs more deta
 
 User message: 
 """
+
+BACKGROUND_PATH = "assets/welcome_bg.png"   # your template image
+FONT_PATH = "assets/Inter/static/Inter-Bold.ttf"               # any .ttf, default PIL font looks bad
+AVATAR_SIZE = 200
+
+DEFAULT_JOIN_MESSAGE = (
+    "{mention} just joined **{server}**. Take a moment to explore the server. We hope you have a great time ahead. "
+)
+
+DEFAULT_LEAVE_MESSAGE = (
+    "**{username}** has left **{server}**. We're now at {member_count} members."
+)
