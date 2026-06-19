@@ -3,7 +3,7 @@ from discord import app_commands
 import enum
 import asyncio
 from utils.helpers.helpers_new import *
-from utils.helpers.neon import Database
+from utils.neon import Database
 from utils.hyperparams import *
 import traceback
 from pathlib import Path
