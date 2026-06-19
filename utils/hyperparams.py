@@ -33,5 +33,5 @@ DEFAULT_JOIN_MESSAGE = (
 )
 
 DEFAULT_LEAVE_MESSAGE = (
-    "**{username}** has left **{server}**. We're now at {member_count} members."
+    "Goodbye. {mention} left the server."
 )

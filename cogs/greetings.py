@@ -209,7 +209,6 @@ class Greeting(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        print(f"[DEBUG] on_member_remove fired for {member.display_name}")
         config = self.bot.db.get_greetings_config(member.guild.id)
         if config['leave_channel_id'] is None:
             return
@@ -217,7 +216,7 @@ class Greeting(commands.Cog):
         if channel is None:
             try:
                 channel = await member.guild.fetch_channel(config['leave_channel_id'])
-            except discord.HTTPException:
+            except discord.HTTPException as e:
                 return
         leave_message = config['leave_message'] or DEFAULT_LEAVE_MESSAGE
         message = leave_message.format(
@@ -240,8 +239,7 @@ class Greeting(commands.Cog):
             await channel.send(embed=embed, file=file)
         except asyncio.TimeoutError:
             await channel.send(content=message)
-        except Exception:
-            # image generation/send failed - don't let a bad leave image break the leave flow
+        except Exception as e:
             traceback.print_exc()
             await channel.send(content=message)
 
