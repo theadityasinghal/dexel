@@ -2,7 +2,7 @@ import asyncio
 import os
 import discord
 from discord.ext import commands
-from utils.helpers.neon import *
+from utils.neon import *
 
 try:
     from dotenv import load_dotenv
