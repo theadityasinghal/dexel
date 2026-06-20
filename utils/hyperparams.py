@@ -33,5 +33,8 @@ DEFAULT_JOIN_MESSAGE = (
 )
 
 DEFAULT_LEAVE_MESSAGE = (
-    "Goodbye. {mention} left the server."
+    "**{username}** has left **{server}**. We're now at {member_count} members."
 )
+
+STANDARD_SERVER_FALLBACK = f"This server is currently on the **Standard** plan, so premium features are not enabled. If you'd like access to premium functionality, please reach out to <@{ownerid}>. \n\nYou can view the full list of premium commands by running `/help` and selecting the Premium section of the menu. \n\nI'm an independent developer building this bot on my own, and your support in purchasing premium would mean a great deal to me."
+
