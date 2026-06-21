@@ -19,7 +19,7 @@ class GreetingType(enum.Enum):
 class Greeting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.BASE_DIR = Path(__file__).resolve().parent.parent  # utils/ -> project root
+        self.BASE_DIR = Path(__file__).resolve().parent.parent.parent  # utils/ -> project root
         self.ASSETS_DIR = self.BASE_DIR / "assets"
         self.WELCOME_BACKGROUND_PATH = self.ASSETS_DIR / "welcome_bg1.png"
         self.FONT_PATH = self.ASSETS_DIR / "Inter" / "static" / "Inter_24pt-Bold.ttf"
