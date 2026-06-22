@@ -87,7 +87,7 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
             return
 
         window = self.windows[message.guild.id]
-        window.append(f"{message.author.display_name} ({message.author.id}): {message.content}")
+        window.append(f"{message.author.display_name} ({message.author.id}) (mentionable by <@{message.author.id}>): {message.content}")
         context = "\n".join(window)
 
         pre_prompt = config["pre_prompt"]

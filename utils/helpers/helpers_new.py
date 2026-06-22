@@ -5,6 +5,7 @@ import os
 import asyncio
 from utils.hyperparams import *
 import mimetypes
+import random
 
 try:
     from dotenv import load_dotenv
@@ -26,14 +27,16 @@ class LLMHelper():
         self.client = genai.Client(api_key=os.getenv("GOOGLE_LLM_API"))
         self.general = GeneralHelper()
 
-    async def _ask(self, final_prompt, model="gemma-4-31b-it", max_output_tokens=1500, images=None):
+    async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None):
         """
         images: optional, one of:
         - (bytes, mime_type) tuple, e.g. (img_bytes, "image/png")
         - list of such tuples, for multi-image input
         """
         contents = []
-
+        if models is None:
+            models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+        model = random.choices(models, weights=[1] * len(models), k=1)[0]
         if images:
             if isinstance(images, tuple):
                 images = [images]
