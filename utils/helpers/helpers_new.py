@@ -4,6 +4,7 @@ from discord.ext import commands
 import os
 import asyncio
 from utils.hyperparams import *
+import mimetypes
 
 try:
     from dotenv import load_dotenv
@@ -11,30 +12,57 @@ try:
 except:
     pass
 
+class GeneralHelper():
+    def __init__(self):
+        pass
+
+    async def _attachment_to_part(self, attachment: discord.Attachment) -> tuple[bytes, str]:
+        img_bytes = await attachment.read()
+        mime_type = attachment.content_type or mimetypes.guess_type(attachment.filename)[0] or "image/png"
+        return img_bytes, mime_type
+
 class LLMHelper():
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_LLM_API"))
+        self.general = GeneralHelper()
 
-    async def _ask(self, final_prompt, model="gemma-4-31b-it", max_output_tokens=1500):
+    async def _ask(self, final_prompt, model="gemma-4-31b-it", max_output_tokens=1500, images=None):
+        """
+        images: optional, one of:
+        - (bytes, mime_type) tuple, e.g. (img_bytes, "image/png")
+        - list of such tuples, for multi-image input
+        """
+        contents = []
+
+        if images:
+            if isinstance(images, tuple):
+                images = [images]
+            for img_bytes, mime_type in images:
+                contents.append(genai.types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
+
+        contents.append(final_prompt)  # text after image(s)
+
         response = await self.client.aio.models.generate_content(
             model=model,
-            contents=final_prompt,
+            contents=contents,
             config=genai.types.GenerateContentConfig(
                 max_output_tokens=max_output_tokens,
             )
         )
-        # print(response)
-        # instead of response.text
+
         parts = response.candidates[0].content.parts
         actual_text = next(p.text for p in parts if not p.thought)
-        # print(actual_text)
         return actual_text
     
-    async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2):
+    async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2, images_raw = None):
         final_prompt = system_prompt + user_raw_prompt
         for attempt in range(attempts):
             try:
-                response = await self._ask(final_prompt=final_prompt)
+                if images_raw:
+                    img_part = await self.general._attachment_to_part(images_raw[0])
+                    response = await self._ask(final_prompt, images=img_part)
+                else:
+                    response = await self._ask(final_prompt)
                 if not response:
                     raise RuntimeError("Got an empty message")
                 return response
@@ -106,3 +134,4 @@ class MenuView(discord.ui.View):
             await interaction.response.send_message("Not your menu.", ephemeral=True)
             return False
         return True
+

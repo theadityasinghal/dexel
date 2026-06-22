@@ -79,12 +79,10 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        print("triggered 1")
         config = await self.bot.supabase_db.fetchrow(
             "SELECT channel_id, pre_prompt FROM ai_config WHERE guild_id = $1",
             message.guild.id,
         )
-        print(f"DB channel_id: {config['channel_id']!r} ({type(config['channel_id'])}) vs message: {message.channel.id}")
         if not config or not config["channel_id"] or message.channel.id != config["channel_id"]:
             return
 
@@ -98,10 +96,13 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
             if pre_prompt else ""
         )
 
-        full_prompt = f"{system_prompt}\n\n{modified_pre_prompt}\n\n{context}"
+        full_prompt = f"{modified_pre_prompt}\n\n{context}"
 
         async with message.channel.typing():
-            response = await self.LLMinstance.askllm(full_prompt)
+            if message.attachments:
+                response = await self.LLMinstance.askllm(full_prompt, images_raw=message.attachments)
+            else:
+                response = await self.LLMinstance.askllm(full_prompt)
 
             if isinstance(response, discord.Embed):
                 sent = await message.channel.send(
