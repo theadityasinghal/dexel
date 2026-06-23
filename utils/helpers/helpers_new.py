@@ -24,7 +24,7 @@ class GeneralHelper():
 
 class LLMHelper():
     def __init__(self):
-        self.client = genai.Client(api_key=os.getenv("GOOGLE_LLM_API"))
+        self.client = genai.Client(api_key=os.getenv("MR_GPU_BOI_API_FOR_GOOGLE"))
         self.general = GeneralHelper()
 
     async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None):
@@ -35,7 +35,8 @@ class LLMHelper():
         """
         contents = []
         if models is None:
-            models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+            models = ["gemini-3.5-flash"]
+            #models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
         model = random.choices(models, weights=[1] * len(models), k=1)[0]
         if images:
             if isinstance(images, tuple):
