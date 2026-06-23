@@ -41,21 +41,21 @@ class LLMHelper():
 
         contents.append(final_prompt)
 
-        level_map = {
-            "minimal": genai.types.ThinkingLevel.MINIMAL,
-            "low":     genai.types.ThinkingLevel.LOW,
-            "medium":  genai.types.ThinkingLevel.MEDIUM,
-            "high":    genai.types.ThinkingLevel.HIGH,
-        }
+        # level_map = {
+        #     "minimal": genai.types.ThinkingLevel.MINIMAL,
+        #     "low":     genai.types.ThinkingLevel.LOW,
+        #     "medium":  genai.types.ThinkingLevel.MEDIUM,
+        #     "high":    genai.types.ThinkingLevel.HIGH,
+        # }
 
         response = await self.client.aio.models.generate_content(
             model=model,
             contents=contents,
             config=genai.types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens,
-                thinking_config=genai.types.ThinkingConfig(
-                    thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
-                )
+                max_output_tokens=max_output_tokens#,
+                # thinking_config=genai.types.ThinkingConfig(
+                #     thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+                # )
             )
         )
         # print(response.usage_metadata.prompt_token_count)
