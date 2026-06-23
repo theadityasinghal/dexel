@@ -30,7 +30,8 @@ class LLMHelper():
     async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None, thinking_level="low"):
         contents = []
         if models is None:
-            models = ["gemini-3.5-flash"]
+            models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+            #models = ["gemini-3.5-flash"]
         model = random.choices(models, weights=[1] * len(models), k=1)[0]
         if images:
             if isinstance(images, tuple):
