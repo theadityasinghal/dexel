@@ -30,8 +30,8 @@ class LLMHelper():
     async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None, thinking_level="low"):
         contents = []
         if models is None:
-            models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
-            #models = ["gemini-3.5-flash"]
+            #models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+            models = ["gemini-3.1-flash-lite"]
         model = random.choices(models, weights=[1] * len(models), k=1)[0]
         if images:
             if isinstance(images, tuple):
@@ -41,21 +41,21 @@ class LLMHelper():
 
         contents.append(final_prompt)
 
-        # level_map = {
-        #     "minimal": genai.types.ThinkingLevel.MINIMAL,
-        #     "low":     genai.types.ThinkingLevel.LOW,
-        #     "medium":  genai.types.ThinkingLevel.MEDIUM,
-        #     "high":    genai.types.ThinkingLevel.HIGH,
-        # }
+        level_map = {
+            "minimal": genai.types.ThinkingLevel.MINIMAL,
+            "low":     genai.types.ThinkingLevel.LOW,
+            "medium":  genai.types.ThinkingLevel.MEDIUM,
+            "high":    genai.types.ThinkingLevel.HIGH,
+        }
 
         response = await self.client.aio.models.generate_content(
             model=model,
             contents=contents,
             config=genai.types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens#,
-                # thinking_config=genai.types.ThinkingConfig(
-                #     thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
-                # )
+                max_output_tokens=max_output_tokens,
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+                )
             )
         )
         # print(response.usage_metadata.prompt_token_count)
