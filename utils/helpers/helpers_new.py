@@ -27,16 +27,10 @@ class LLMHelper():
         self.client = genai.Client(api_key=os.getenv("MR_GPU_BOI_API_FOR_GOOGLE"))
         self.general = GeneralHelper()
 
-    async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None):
-        """
-        images: optional, one of:
-        - (bytes, mime_type) tuple, e.g. (img_bytes, "image/png")
-        - list of such tuples, for multi-image input
-        """
+    async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None, thinking_level="low"):
         contents = []
         if models is None:
             models = ["gemini-3.5-flash"]
-            #models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
         model = random.choices(models, weights=[1] * len(models), k=1)[0]
         if images:
             if isinstance(images, tuple):
@@ -44,16 +38,29 @@ class LLMHelper():
             for img_bytes, mime_type in images:
                 contents.append(genai.types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
 
-        contents.append(final_prompt)  # text after image(s)
+        contents.append(final_prompt)
+
+        level_map = {
+            "minimal": genai.types.ThinkingLevel.MINIMAL,
+            "low":     genai.types.ThinkingLevel.LOW,
+            "medium":  genai.types.ThinkingLevel.MEDIUM,
+            "high":    genai.types.ThinkingLevel.HIGH,
+        }
 
         response = await self.client.aio.models.generate_content(
             model=model,
             contents=contents,
             config=genai.types.GenerateContentConfig(
                 max_output_tokens=max_output_tokens,
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+                )
             )
         )
-
+        # print(response.usage_metadata.prompt_token_count)
+        # print(response.usage_metadata.candidates_token_count)
+        # print(response.usage_metadata.thoughts_token_count)
+        # print(response.usage_metadata.total_token_count)
         parts = response.candidates[0].content.parts
         actual_text = next(p.text for p in parts if not p.thought)
         return actual_text
