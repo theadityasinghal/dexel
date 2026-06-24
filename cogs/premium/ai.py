@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from utils.premium import *
+from utils.customDecorators import *
 from utils.hyperparams import *
 from collections import defaultdict, deque
 from utils.helpers.helpers_new import *
@@ -11,6 +11,21 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
         self.bot = bot
         self.windows: dict[int, deque] = defaultdict(lambda: deque(maxlen=20))  # guild_id -> sliding window
         self.LLMinstance = LLMHelper()  # however you're currently constructing this
+
+    @app_commands.command(name="chat", description="Chat with Dexel :D")
+    @app_commands.describe(prompt="your prompt, could be anything, say 'who's the owner of this bot?")
+    async def embed(self, interaction: discord.Interaction, prompt: str):
+        await interaction.response.defer()
+        response = await self.LLMinstance.askllm(prompt)
+        if isinstance(response, discord.Embed):
+            await interaction.followup.send(embed=response)
+            return
+        embed = discord.Embed(
+            description=
+            f"""{response}""",
+            color=discord.Color.blurple()
+        )
+        await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="setup", description="Configure the AI chat channel and pre-prompt for this server")
     @app_commands.checks.has_permissions(manage_guild=True)

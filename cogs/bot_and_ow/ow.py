@@ -19,22 +19,23 @@ class OW(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if member.bot:
+        if member.bot or member.guild.id != 1514609250222080072:
             return
-        text = f"""Invite: [Add Dexel to your server](https://discord.com/oauth2/authorize?client_id=1435304876266619061&permissions=3405200329403511&integration_type=0&scope=bot+applications.commands)\nSupport server: https://discord.gg/VqY8qkHuWY"""
-        
         embed = discord.Embed(
-            description=(f"""
-                "Hey! Heads up — Dexel's pretty bare right now, basically just `/chat <prompt>` at the moment. But I'm an indie dev building this solo, and the only way it grows is through people like you. If you've got a sec, it'd mean a lot if you invited Dexel to your server or jumped into the support server. Either way, welcome 👋 """
+            description=(
+                "Hey! Thanks for joining — Dexel's a multi-purpose bot I'm building solo. "
+                "It's got moderation, a counting game, AI chat with context history, and more being added regularly.\n\n"
+                "If it's useful to you, it'd mean a lot if you invited it to your server or dropped by the support server.\n\n"
+                "[Add Dexel to your server](https://discord.com/oauth2/authorize?client_id=1435304876266619061&permissions=3405200329403511&integration_type=0&scope=bot+applications.commands) "
+                "· [Support server](https://discord.gg/VqY8qkHuWY)\n\n"
+                "Either way, welcome 👋"
             ),
-            color=discord.Color.blue()
+            color=discord.Color.blurple(),
         )
+
         try:
             await member.send(embed=embed)
-            await member.send(text)
-        except discord.Forbidden:
-            pass
-        except discord.HTTPException:
+        except (discord.Forbidden, discord.HTTPException):
             pass
 
     @commands.Cog.listener()

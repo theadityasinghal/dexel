@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from utils.premium import *
+from utils.customDecorators import *
 
 def format_perms(perms: list[str]) -> str:
     return ", ".join(p.replace("_", " ").title() for p in perms)

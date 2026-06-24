@@ -32,16 +32,3 @@ async def remove_premium(pool: asyncpg.Pool, guild_id: int):
         """,
         guild_id,
     )
-
-class NotPremium(app_commands.CheckFailure):
-    """Raised when a guild doesn't have an active premium subscription."""
-    pass
-
-
-def premium_check():
-    async def predicate(interaction: discord.Interaction) -> bool:
-        bot = interaction.client  # your Bot subclass, has .supabase_db
-        if not await is_premium(pool=bot.supabase_db, guild_id=interaction.guild_id):
-            raise NotPremium("This server needs **premium** to use this command.")
-        return True
-    return app_commands.check(predicate)

@@ -31,13 +31,6 @@ class App(commands.Cog):
         embed.add_field(name="Uptime", value=str(discord.utils.utcnow() - self.bot.start_time).split(".")[0], inline=True)
         await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="help", description="oh help this pour soul!")
-    @app_commands.describe()
-    async def help(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        embed = discord.Embed(title="Help Menu", description="Pick a category below.")
-        await interaction.followup.send(embed=embed, view=MenuView(pages = HELP_CATEGORIES, author_id = interaction.user.id))
-
     @app_commands.command(name="ping", description="check how fast the bot is ⚡️")
     @app_commands.describe()
     async def ping(self, interaction: discord.Interaction):
