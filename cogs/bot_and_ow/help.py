@@ -114,6 +114,21 @@ COMMANDS: dict[str, dict] = {
             "`/ai chat` is stateless — it never reads or writes conversation history."
         ),
     },
+    "tldr": {
+        "category": "Utility",
+        "name": "/tldr",
+        "description": (
+            "Summarize a channel on demand. In a chat or thread it recaps the last 30 messages; "
+            "in a forum it gives an overview of the 10 most recent posts."
+        ),
+        "usage": "/tldr [channel]",
+        "parameters": [
+            ("`channel`", "Optional", "Channel to summarize. Defaults to where you run it. Point at a forum to recap its posts."),
+        ],
+        "subcommands": None,
+        "permissions": "None",
+        "notes": "Anyone can use it, once per minute. The summary is posted publicly in the channel.",
+    },
 }
 
 
@@ -162,7 +177,11 @@ CATEGORIES: dict[str, tuple[str, str]] = {
     ),
     "utility": (
         "🛠️ Utility",
-        "Nothing here yet — coming soon.",
+        (
+            "Handy tools.\n\n"
+            "`/tldr` — Summarize a channel: the last 30 messages in a chat, or the 10 most recent posts in a forum.\n"
+            "> Anyone can use it, once a minute. Posted publicly."
+        ),
     ),
 }
 
@@ -266,6 +285,7 @@ class Help(commands.Cog):
         app_commands.Choice(name="ping",     value="ping"),
         app_commands.Choice(name="help",     value="help"),
         app_commands.Choice(name="ai",       value="ai"),
+        app_commands.Choice(name="tldr",     value="tldr"),
     ])
     async def help_command(
         self,

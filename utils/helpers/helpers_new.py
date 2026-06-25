@@ -83,6 +83,35 @@ class LLMHelper():
                 await asyncio.sleep(wait_time)
         return customError("LLMfailure")
 
+    async def summarize(self, content, kind="chat", attempts=4, wait_time=2):
+        if kind == "forum":
+            instr = (
+                "You are summarizing a Discord forum channel for someone catching up. "
+                "Below are recent posts, each with its title and opening message. Give a short "
+                "overview: one concise line per post on what it's about, then a one-sentence "
+                "overall theme. Use bullet points. Be factual; do not invent anything. Keep it "
+                "under 250 words.\n\nPOSTS:\n"
+            )
+        else:
+            instr = (
+                "You are summarizing a Discord conversation for someone catching up on what they "
+                "missed. Summarize concisely using a few short bullet points. Cover the main topics, "
+                "any decisions or events (with times/links), open questions, and notable resources. "
+                "Be factual; do not invent anything not present. Keep it under 200 words.\n\n"
+                "CONVERSATION:\n"
+            )
+        prompt = instr + content
+        for attempt in range(attempts):
+            try:
+                resp = await self._ask(prompt, max_output_tokens=900, thinking_level="low")
+                if not resp:
+                    raise RuntimeError("empty summary")
+                return resp
+            except Exception:
+                await asyncio.sleep(wait_time)
+        return customError("LLMfailure")
+
+
 def customError(permission, arguments = None) -> discord.Embed:
     categories = {
         "missingUserPerm": ["Missing User Permission","The user doesn't have the permission(s) to use this command"],
