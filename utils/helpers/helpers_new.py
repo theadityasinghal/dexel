@@ -13,6 +13,11 @@ try:
 except:
     pass
 
+import logging
+
+logger = logging.getLogger("dexel.llm")
+
+
 class GeneralHelper():
     def __init__(self):
         pass
@@ -27,7 +32,7 @@ class LLMHelper():
         self.client = genai.Client(api_key=os.getenv("MR_GPU_BOI_API_FOR_GOOGLE"))
         self.general = GeneralHelper()
 
-    async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None, thinking_level="low"):
+    async def _ask(self, final_prompt, models=None, max_output_tokens=1500, images=None, thinking_level="low", system_instruction=None):
         contents = []
         if models is None:
             #models = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
@@ -48,15 +53,17 @@ class LLMHelper():
             "high":    genai.types.ThinkingLevel.HIGH,
         }
 
+        config = genai.types.GenerateContentConfig(
+            max_output_tokens=max_output_tokens,
+            thinking_config=genai.types.ThinkingConfig(
+                thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+            ),
+            system_instruction=system_instruction,  # None -> no system prompt (e.g. for summaries)
+        )
         response = await self.client.aio.models.generate_content(
             model=model,
             contents=contents,
-            config=genai.types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens,
-                thinking_config=genai.types.ThinkingConfig(
-                    thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
-                )
-            )
+            config=config,
         )
         # print(response.usage_metadata.prompt_token_count)
         # print(response.usage_metadata.candidates_token_count)
@@ -67,19 +74,18 @@ class LLMHelper():
         return actual_text
     
     async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2, images_raw = None):
-        final_prompt = system_prompt + user_raw_prompt
         for attempt in range(attempts):
             try:
                 if images_raw:
                     img_part = await self.general._attachment_to_part(images_raw[0])
-                    response = await self._ask(final_prompt, images=img_part)
+                    response = await self._ask(user_raw_prompt, images=img_part, system_instruction=system_prompt)
                 else:
-                    response = await self._ask(final_prompt)
+                    response = await self._ask(user_raw_prompt, system_instruction=system_prompt)
                 if not response:
                     raise RuntimeError("Got an empty message")
                 return response
             except Exception as e:
-                #print(f"Attempt {attempt + 1} failed: {e}")
+                logger.warning("askllm attempt %d failed: %r", attempt + 1, e)
                 await asyncio.sleep(wait_time)
         return customError("LLMfailure")
 
