@@ -5,6 +5,7 @@ from utils.customDecorators import *
 from utils.hyperparams import *
 from collections import defaultdict, deque
 from utils.helpers.helpers_new import *
+from utils import memory as user_memory
 
 class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat for this server"):
     def __init__(self, bot: commands.Bot):
@@ -16,7 +17,14 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
     @app_commands.describe(prompt="your prompt, could be anything, say 'who's the owner of this bot?")
     async def embed(self, interaction: discord.Interaction, prompt: str):
         await interaction.response.defer()
-        response = await self.LLMinstance.askllm(prompt)
+        profile = await user_memory.get_memory(self.bot.supabase_db, interaction.user.id)
+        final_prompt = prompt
+        if profile:
+            final_prompt = (
+                f"[Notes about the person you're talking to — their own stated preferences; "
+                f"use them to pitch your answer at the right level: {profile}]\n\n{prompt}"
+            )
+        response = await self.LLMinstance.askllm(final_prompt)
         if isinstance(response, discord.Embed):
             await interaction.followup.send(embed=response)
             return
