@@ -32,7 +32,12 @@ class Dexel(commands.Bot):
             ssl="require",
         )
 
-        for entry in os.walk("./cogs"): 
+        log_channel = os.getenv("LOG_CHANNEL_ID")
+        if log_channel:
+            from utils.discord_logger import setup_discord_logging
+            setup_discord_logging(self, int(log_channel))
+
+        for entry in os.walk("./cogs"):
             dirpath, _, filenames = entry
             for filename in filenames:
                 if filename.endswith(".py") and filename != "__init__.py":
