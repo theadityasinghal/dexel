@@ -1,0 +1,4 @@
+discord.py==2.7.1
+asyncpg==0.31.0
+python-dotenv==1.2.2
+google-genai==2.10.0
