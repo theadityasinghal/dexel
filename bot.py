@@ -28,8 +28,9 @@ class Dexel(commands.Bot):
     async def setup_hook(self):
         setup_error_handler(self)
         self.supabase_db = await asyncpg.create_pool(
-            os.getenv("SUPABASE_DB"),
+            os.getenv("SUPABASE_DB_NEW"),
             ssl="require",
+            statement_cache_size=0,  # required for pooler
         )
 
         for entry in os.walk("./cogs"): 

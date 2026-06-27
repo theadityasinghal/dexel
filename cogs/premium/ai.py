@@ -5,12 +5,47 @@ from utils.customDecorators import *
 from utils.hyperparams import *
 from collections import defaultdict, deque
 from utils.helpers.helpers_new import *
+from utils.memory_manager import update_memory
+import asyncio
+
+MEMORY_TRIGGER = 20
+INACTIVITY_SECONDS = 30 * 60
 
 class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat for this server"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.windows: dict[int, deque] = defaultdict(lambda: deque(maxlen=20))  # guild_id -> sliding window
+        self.user_windows: dict[tuple, deque] = defaultdict(lambda: deque(maxlen=20))  # (guild_id, user_id) -> chat context (unused for LLM, just for memory payload)
+        self.user_pending: dict[tuple, list] = defaultdict(list)   # messages since last memory update
+        self.user_counter: dict[tuple, int] = defaultdict(int)     # message count since last update
+        self.inactivity_tasks: dict[tuple, asyncio.Task] = {}
+        self.memory_cache: dict[int, str] = {}                     # user_id -> memory blob (in-memory cache)
         self.LLMinstance = LLMHelper()  # however you're currently constructing this
+
+    async def _inactivity_timer(self, user_key: tuple, user_id: int):
+        await asyncio.sleep(INACTIVITY_SECONDS)
+        if self.user_pending.get(user_key):
+            await self._trigger_memory_update(user_key, user_id)
+
+    async def _trigger_memory_update(self, user_key: tuple, user_id: int):
+        pending = self.user_pending.get(user_key, [])
+        if not pending:
+            return
+
+        # Snapshot and clear before awaiting to prevent double-trigger
+        snapshot = pending.copy()
+        self.user_pending[user_key] = []
+        self.user_counter[user_key] = 0
+
+        if user_key in self.inactivity_tasks:
+            self.inactivity_tasks[user_key].cancel()
+            del self.inactivity_tasks[user_key]
+
+        current_memory = self.memory_cache.get(user_id, "")
+        new_memory = await update_memory(
+            self.LLMinstance, self.bot.supabase_db, user_id, snapshot, current_memory
+        )
+        self.memory_cache[user_id] = new_memory
 
     @app_commands.command(name="chat", description="Chat with Dexel :D")
     @app_commands.describe(prompt="your prompt, could be anything, say 'who's the owner of this bot?")
@@ -94,6 +129,7 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
+
         config = await self.bot.supabase_db.fetchrow(
             "SELECT channel_id, pre_prompt FROM ai_config WHERE guild_id = $1",
             message.guild.id,
@@ -101,9 +137,35 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
         if not config or not config["channel_id"] or message.channel.id != config["channel_id"]:
             return
 
+        user_key = (message.guild.id, message.author.id)
+
+        # Load memory from DB into cache if not already loaded
+        if message.author.id not in self.memory_cache:
+            row = await self.bot.supabase_db.fetchrow(
+                "SELECT memory FROM user_memory WHERE user_id = $1", message.author.id
+            )
+            self.memory_cache[message.author.id] = row["memory"] if row else ""
+
+        user_memory = self.memory_cache[message.author.id]
+
+        # Guild-wide window for LLM context (unchanged from your original)
         window = self.windows[message.guild.id]
-        window.append(f"{message.author.display_name} ({message.author.id}) (mentionable by <@{message.author.id}>): {message.content}")
+        window.append(
+            f"{message.author.display_name} ({message.author.id}) (mentionable by <@{message.author.id}>): {message.content}"
+        )
         context = "\n".join(window)
+
+        # Per-user-per-guild pending window for memory tracking
+        user_entry = f"[User] {message.author.display_name} ({message.author.id}): {message.content}"
+        self.user_pending[user_key].append(user_entry)
+        self.user_counter[user_key] += 1
+
+        # Reset inactivity timer
+        if user_key in self.inactivity_tasks:
+            self.inactivity_tasks[user_key].cancel()
+        self.inactivity_tasks[user_key] = asyncio.create_task(
+            self._inactivity_timer(user_key, message.author.id)
+        )
 
         pre_prompt = config["pre_prompt"]
         modified_pre_prompt = (
@@ -111,9 +173,11 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
             if pre_prompt else ""
         )
 
-        full_prompt = f"{modified_pre_prompt}\n\n{context}"
+        memory_block = f"[MEMORY ABOUT CURRENT USER]\n{user_memory}" if user_memory else ""
+        full_prompt = "\n\n".join(filter(None, [safety_prompt, modified_pre_prompt, memory_block, context]))
 
         async with message.channel.typing():
+            #print(full_prompt)
             if message.attachments:
                 response = await self.LLMinstance.askllm(full_prompt, images_raw=message.attachments)
             else:
@@ -131,6 +195,15 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
                 bot_text = response
 
             window.append(f"{self.bot.user.display_name} ({self.bot.user.id}): {bot_text}")
+
+        # Append assistant turn to pending
+        bot_entry = f"[Assistant] {self.bot.user.display_name}: {bot_text}"
+        self.user_pending[user_key].append(bot_entry)
+        self.user_counter[user_key] += 1
+
+        # Trigger memory update if 20 messages hit
+        if self.user_counter[user_key] >= MEMORY_TRIGGER:
+            asyncio.create_task(self._trigger_memory_update(user_key, message.author.id))
         
         
 async def setup(bot: commands.Bot):

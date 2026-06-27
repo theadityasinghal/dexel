@@ -40,24 +40,32 @@ class LLMHelper():
                 contents.append(genai.types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
 
         contents.append(final_prompt)
+        if model == "gemini-3.1-flash-lite":
+            level_map = {
+                "minimal": genai.types.ThinkingLevel.MINIMAL,
+                "low":     genai.types.ThinkingLevel.LOW,
+                "medium":  genai.types.ThinkingLevel.MEDIUM,
+                "high":    genai.types.ThinkingLevel.HIGH,
+            }
 
-        level_map = {
-            "minimal": genai.types.ThinkingLevel.MINIMAL,
-            "low":     genai.types.ThinkingLevel.LOW,
-            "medium":  genai.types.ThinkingLevel.MEDIUM,
-            "high":    genai.types.ThinkingLevel.HIGH,
-        }
-
-        response = await self.client.aio.models.generate_content(
-            model=model,
-            contents=contents,
-            config=genai.types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens,
-                thinking_config=genai.types.ThinkingConfig(
-                    thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+            response = await self.client.aio.models.generate_content(
+                model=model,
+                contents=contents,
+                config=genai.types.GenerateContentConfig(
+                    max_output_tokens=max_output_tokens,
+                    thinking_config=genai.types.ThinkingConfig(
+                        thinking_level=level_map.get(thinking_level, genai.types.ThinkingLevel.MINIMAL)
+                    )
                 )
             )
-        )
+        else:
+            response = await self.client.aio.models.generate_content(
+                model=model,
+                contents=contents,
+                config=genai.types.GenerateContentConfig(
+                    max_output_tokens=max_output_tokens
+                )
+            )
         # print(response.usage_metadata.prompt_token_count)
         # print(response.usage_metadata.candidates_token_count)
         # print(response.usage_metadata.thoughts_token_count)
@@ -66,15 +74,17 @@ class LLMHelper():
         actual_text = next(p.text for p in parts if not p.thought)
         return actual_text
     
-    async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2, images_raw = None):
-        final_prompt = system_prompt + user_raw_prompt
+    async def askllm(self, user_raw_prompt, attempts=5, wait_time = 2, images_raw = None, models = None):
+        if models is None:
+            models = ["gemini-3.1-flash-lite"]
+        final_prompt = safety_prompt + user_raw_prompt
         for attempt in range(attempts):
             try:
                 if images_raw:
                     img_part = await self.general._attachment_to_part(images_raw[0])
-                    response = await self._ask(final_prompt, images=img_part)
+                    response = await self._ask(final_prompt, images=img_part, models=models)
                 else:
-                    response = await self._ask(final_prompt)
+                    response = await self._ask(final_prompt, models=models)
                 if not response:
                     raise RuntimeError("Got an empty message")
                 return response
