@@ -9,7 +9,7 @@ from utils.memory_manager import update_memory
 import asyncio
 
 MEMORY_TRIGGER = 20
-INACTIVITY_SECONDS = 30 * 60
+INACTIVITY_SECONDS = 5 * 60
 
 class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat for this server"):
     def __init__(self, bot: commands.Bot):
@@ -24,6 +24,7 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
 
     async def _inactivity_timer(self, user_key: tuple, user_id: int):
         await asyncio.sleep(INACTIVITY_SECONDS)
+        self.inactivity_tasks.pop(user_key, None)  # remove before triggering
         if self.user_pending.get(user_key):
             await self._trigger_memory_update(user_key, user_id)
 
@@ -33,19 +34,22 @@ class AIChat(commands.GroupCog, name="ai", description="Configure the AI chat fo
             return
 
         # Snapshot and clear before awaiting to prevent double-trigger
-        snapshot = pending.copy()
-        self.user_pending[user_key] = []
-        self.user_counter[user_key] = 0
+        try: 
+            snapshot = pending.copy()
+            self.user_pending[user_key] = []
+            self.user_counter[user_key] = 0
 
-        if user_key in self.inactivity_tasks:
-            self.inactivity_tasks[user_key].cancel()
-            del self.inactivity_tasks[user_key]
+            if user_key in self.inactivity_tasks:
+                self.inactivity_tasks[user_key].cancel()
+                del self.inactivity_tasks[user_key]
 
-        current_memory = self.memory_cache.get(user_id, "")
-        new_memory = await update_memory(
-            self.LLMinstance, self.bot.supabase_db, user_id, snapshot, current_memory
-        )
-        self.memory_cache[user_id] = new_memory
+            current_memory = self.memory_cache.get(user_id, "")
+            new_memory = await update_memory(
+                self.LLMinstance, self.bot.supabase_db, user_id, snapshot, current_memory
+            )
+            self.memory_cache[user_id] = new_memory
+        except Exception as e:
+            print(f"Memory update task failed: {e}")
 
     @app_commands.command(name="chat", description="Chat with Dexel :D")
     @app_commands.describe(prompt="your prompt, could be anything, say 'who's the owner of this bot?")

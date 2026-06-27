@@ -36,8 +36,14 @@ async def update_memory(llm_instance, db, user_id: int, pending_messages: list, 
         f"## Existing memories:\n{existing}\n\n"
         f"## New conversation since last update:\n{conversation}"
     )
+    #print(prompt)
 
-    result = await llm_instance.askllm(prompt, models=["gemma-4-31b-it"])
+    try:
+        result = await llm_instance.askllm(prompt, models=['gemma-4-31b-it'])
+        #print(result)
+    except Exception as e:
+        print(f"Memory update failed: {e}")
+        return current_memory
 
     if isinstance(result, str):
         await db.execute(
