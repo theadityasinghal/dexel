@@ -93,7 +93,8 @@ COMMANDS: dict[str, dict] = {
         "description": (
             "AI-powered commands for your server. "
             "Set up a dedicated channel for context-aware conversations, "
-            "or send one-off prompts directly with `/ai chat`."
+            "send one-off prompts directly with `/ai chat`, "
+            "or summarize recent messages in a channel with `/ai summarize`."
         ),
         "usage": "/ai <subcommand>",
         "parameters": None,
@@ -105,6 +106,11 @@ COMMANDS: dict[str, dict] = {
             ("`chat <prompt>`", (
                 "Send a one-off prompt to the AI. No setup or history — each call is independent."
             )),
+            ("`summarize <channel> [limit] [since] [topic]`", (
+                "Summarize recent messages from a channel. "
+                "Fetches up to 500 messages (default 100). "
+                "Optionally filter by time window (`30m`, `2h`, `1d`, `7d`) or focus on a specific topic or keyword."
+            )),
         ],
         "permissions": "Manage Guild (setup only)",
         "notes": (
@@ -113,6 +119,35 @@ COMMANDS: dict[str, dict] = {
             "The pre-prompt is always injected with a distrust caveat. "
             "`/ai chat` is stateless — it never reads or writes conversation history."
         ),
+    },
+    "profile": {
+        "category": "Utility",
+        "name": "/profile",
+        "description": "View your profile or someone else's.",
+        "usage": "/profile [user]",
+        "parameters": [
+            ("`user`", "Optional", "The user to view. Defaults to yourself."),
+        ],
+        "subcommands": None,
+        "permissions": "None",
+        "notes": None,
+    },
+    "greeting": {
+        "category": "Server",
+        "name": "/greeting",
+        "description": (
+            "Configure join or leave greetings for your server. "
+            "Supports custom messages with placeholders for mention, username, and server name."
+        ),
+        "usage": "/greeting [type] [channel] [message]",
+        "parameters": [
+            ("`type`",    "Optional", "Configure join or leave greetings. Leave blank to view the current config."),
+            ("`channel`", "Optional", "Channel where this greeting will be posted."),
+            ("`message`", "Optional", "Custom message — use `{mention}`, `{username}`, `{server}` as placeholders."),
+        ],
+        "subcommands": None,
+        "permissions": "Manage Guild",
+        "notes": None,
     },
 }
 
@@ -153,16 +188,25 @@ CATEGORIES: dict[str, tuple[str, str]] = {
             "AI-powered commands.\n\n"
             "`/ai setup` — Configure a channel for context-aware AI chat. Requires **Manage Guild**.\n"
             "> Maintains a sliding 20-message history per server. Supports custom pre-prompts.\n\n"
-            "`/ai chat` — One-off AI prompt with no setup or history needed."
+            "`/ai chat` — One-off AI prompt with no setup or history needed.\n\n"
+            "`/ai summarize` — Summarize recent messages from a channel.\n"
+            "> Fetches up to 500 messages. Filter by time window or focus on a specific topic."
         ),
     ),
     "server": (
         "🏠 Server",
-        "Nothing here yet — coming soon.",
+        (
+            "Commands to configure your server's experience.\n\n"
+            "`/greeting` — Configure join or leave greetings. Requires **Manage Guild**.\n"
+            "> Supports custom messages with `{mention}`, `{username}`, and `{server}` placeholders."
+        ),
     ),
     "utility": (
         "🛠️ Utility",
-        "Nothing here yet — coming soon.",
+        (
+            "General-purpose utility commands.\n\n"
+            "`/profile` — View your profile or someone else's."
+        ),
     ),
 }
 
@@ -218,9 +262,9 @@ class Help(commands.Cog):
                 "🔨 **Moderation** — Channel and server management\n"
                 "🎮 **Games** — Interactive server games\n"
                 "🤖 **Bot** — Info and meta commands\n"
-                "🧠 **AI** — AI chat features\n"
-                "🏠 **Server** — Coming soon\n"
-                "🛠️ **Utility** — Coming soon"
+                "🧠 **AI** — AI chat and summarization\n"
+                "🏠 **Server** — Greetings and server config\n"
+                "🛠️ **Utility** — General-purpose commands"
             ),
             color=discord.Color.blurple(),
         )
@@ -266,6 +310,8 @@ class Help(commands.Cog):
         app_commands.Choice(name="ping",     value="ping"),
         app_commands.Choice(name="help",     value="help"),
         app_commands.Choice(name="ai",       value="ai"),
+        app_commands.Choice(name="profile",  value="profile"),
+        app_commands.Choice(name="greeting", value="greeting"),
     ])
     async def help_command(
         self,
