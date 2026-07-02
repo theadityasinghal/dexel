@@ -22,7 +22,7 @@ class Dexel(commands.Bot):
 
         super().__init__(command_prefix="!", intents=intents)
 
-        self.db = Database()  # Neon (psycopg2) - used by existing cogs, unchanged
+        self.db = Database()  # Neon 
         self.supabase_db = None  # asyncpg pool, set up in setup_hook
 
     async def setup_hook(self):
